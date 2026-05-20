@@ -16,6 +16,7 @@ import requests
 import yaml
 
 from backend.utils.logger import get_logger
+from backend.utils.proxy_utils import fix_proxy_fields
 
 logger = get_logger(__name__)
 
@@ -190,9 +191,6 @@ def convert_proxy_string(proxy_string, target='ClashMeta'):
         return None
     finally:
         _delete_subscription(base, _TEMP_NODE_SUB_NAME)
-
-
-from backend.utils.proxy_utils import fix_proxy_fields
 
 
 def parse_proxies_from_yaml(yaml_text):
