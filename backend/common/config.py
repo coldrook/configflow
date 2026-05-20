@@ -173,15 +173,27 @@ def save_config():
         return False
 
 
+def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    """递归深度合并两个字典，override 中的值优先"""
+    result = {}
+    for key in base:
+        if key in override:
+            if isinstance(base[key], dict) and isinstance(override[key], dict):
+                result[key] = _deep_merge(base[key], override[key])
+            else:
+                result[key] = override[key]
+        else:
+            result[key] = base[key]
+    for key in override:
+        if key not in result:
+            result[key] = override[key]
+    return result
+
+
 def safe_import_config(new_data: Dict[str, Any]) -> None:
-    """安全导入配置：与默认配置合并，避免丢失字段。"""
+    """安全导入配置：与默认配置递归合并，避免丢失字段。"""
     default = get_default_config()
-    merged = {}
-    for key in default:
-        merged[key] = new_data.get(key, default[key])
-    for key in new_data:
-        if key not in merged:
-            merged[key] = new_data[key]
+    merged = _deep_merge(default, new_data)
     config_data.clear()
     config_data.update(merged)
     save_config()

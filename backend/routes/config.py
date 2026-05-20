@@ -218,6 +218,8 @@ def export_config():
 @require_auth
 def import_config():
     try:
+        if not isinstance(request.json, dict):
+            return jsonify({'success': False, 'message': '请求数据必须是 JSON 对象'}), 400
         from backend.common.config import safe_import_config
         safe_import_config(request.json)
         return jsonify({'success': True})

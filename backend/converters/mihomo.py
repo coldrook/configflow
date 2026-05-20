@@ -1091,14 +1091,16 @@ def convert_node_to_mihomo(node: Dict[str, Any]) -> Dict[str, Any]:
         if parsed:
             logger.info(f"节点 '{outer_name}' 为 JSON/YAML 格式，本地解析")
             parsed['name'] = outer_name
-            return fix_proxy_fields(parsed)
+            fix_proxy_fields(parsed)
+            return parsed
 
         # URI 或 base64 格式，通过 Sub-Store 转换
         logger.info(f"节点 '{outer_name}' 为 URI/base64 格式，调用 Sub-Store 转换")
         proxy = convert_proxy_string(proxy_string)
         if proxy:
             proxy['name'] = outer_name
-            return fix_proxy_fields(proxy)
+            fix_proxy_fields(proxy)
+            return proxy
         return None
 
     # 已经是结构化的节点（从缓存加载的），将 params 展开为扁平 mihomo 格式
@@ -1115,4 +1117,5 @@ def convert_node_to_mihomo(node: Dict[str, Any]) -> Dict[str, Any]:
     }
     # 将 params 中的所有字段展开到顶层
     base.update(params)
-    return fix_proxy_fields(base)
+    fix_proxy_fields(base)
+    return base
