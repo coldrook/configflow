@@ -36,7 +36,7 @@ def get_mihomo_config():
                 jwt_token = auth_header.split(' ')[1]
                 jwt.decode(jwt_token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
                 has_valid_jwt = True
-            except:
+            except Exception:
                 pass
 
         # 如果没有有效的 JWT，检查配置令牌（外部请求）
@@ -89,7 +89,7 @@ def get_surge_config():
                 jwt_token = auth_header.split(' ')[1]
                 jwt.decode(jwt_token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
                 has_valid_jwt = True
-            except:
+            except Exception:
                 pass
 
         # 如果没有有效的 JWT，检查配置令牌（外部请求）
@@ -140,7 +140,7 @@ def get_mosdns_config():
                 jwt_token = auth_header.split(' ')[1]
                 jwt.decode(jwt_token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
                 has_valid_jwt = True
-            except:
+            except Exception:
                 pass
 
         # 如果没有有效的 JWT，检查配置令牌（外部请求）
@@ -204,7 +204,7 @@ def export_config():
             # 清理临时文件
             try:
                 os.unlink(temp_file)
-            except:
+            except Exception:
                 pass
     else:
         # 正常导出

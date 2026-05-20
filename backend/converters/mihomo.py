@@ -122,7 +122,7 @@ def generate_mihomo_config(config_data: Dict[str, Any], base_url: str = '') -> s
             mihomo_config = yaml.safe_load(custom_mihomo_config)
             if not isinstance(mihomo_config, dict):
                 mihomo_config = {}
-        except:
+        except Exception:
             # 如果解析失败，使用默认配置
             mihomo_config = {}
     else:

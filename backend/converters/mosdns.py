@@ -215,7 +215,7 @@ def parse_dns_upstreams(dns_config: str) -> List[Dict[str, Any]]:
             # 单个 YAML 对象（没有 - 列表标记）
             if 'addr' in parsed:
                 return [parsed]
-    except:
+    except Exception:
         # 不是有效的 YAML，继续使用简单格式解析
         pass
 
@@ -534,7 +534,7 @@ def generate_mosdns_config(config_data: Dict[str, Any], base_url: str = '') -> s
             mosdns_config = yaml.safe_load(custom_mosdns_config)
             if not isinstance(mosdns_config, dict):
                 mosdns_config = {}
-        except:
+        except Exception:
             # 如果解析失败，使用默认配置
             mosdns_config = {}
     else:
