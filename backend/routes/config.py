@@ -214,12 +214,9 @@ def export_config():
 @config_bp.route('/import', methods=['POST'])
 @require_auth
 def import_config():
-    """导入配置"""
     try:
-        from backend.common.config import config_data as global_config
-        global_config.clear()
-        global_config.update(request.json)
-        save_config()
+        from backend.common.config import safe_import_config
+        safe_import_config(request.json)
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500

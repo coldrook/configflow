@@ -37,6 +37,7 @@ def get_default_config() -> Dict[str, Any]:
             'server_domain': '',
             'github_proxy_domain': {},
         },
+        'subscription_aggregations': [],
         'mihomo': {  # Mihomo 配置
             'custom_config': ''
         },
@@ -170,6 +171,20 @@ def save_config():
     except Exception as e:
         print(f"Error saving config: {e}")
         return False
+
+
+def safe_import_config(new_data: Dict[str, Any]) -> None:
+    """安全导入配置：与默认配置合并，避免丢失字段。"""
+    default = get_default_config()
+    merged = {}
+    for key in default:
+        merged[key] = new_data.get(key, default[key])
+    for key in new_data:
+        if key not in merged:
+            merged[key] = new_data[key]
+    config_data.clear()
+    config_data.update(merged)
+    save_config()
 
 
 def clean_invalid_aggregation_references():
