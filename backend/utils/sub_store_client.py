@@ -59,6 +59,47 @@ def _is_yaml_response(text):
     return False
 
 
+def _fetch_direct_subscription_yaml(url):
+    """直接拉取订阅 URL，并在其本身已返回 proxies YAML 时直接使用。"""
+    headers = {
+        'User-Agent': 'clash.meta'
+    }
+    logger.info(f"直接拉取订阅 URL: {url}")
+    resp = requests.get(url, headers=headers, timeout=30)
+    resp.raise_for_status()
+
+    text = resp.text
+    if not _is_yaml_response(text):
+        preview = text[:200].replace('\n', '\\n')
+        raise Exception(
+            "订阅 URL 未直接返回有效的 proxies YAML。"
+            f"响应预览: {preview}"
+        )
+
+    logger.info("订阅 URL 直接返回有效 YAML，跳过 Sub-Store 转换")
+    return text
+
+
+def _looks_like_sub_store_rendered_yaml_response(url):
+    """探测订阅 URL 是否已经是 Sub-Store 导出的最终 YAML。"""
+    headers = {
+        'User-Agent': 'clash.meta'
+    }
+    resp = requests.get(url, headers=headers, timeout=15)
+    resp.raise_for_status()
+
+    powered_by = resp.headers.get('x-powered-by', '')
+    if 'sub-store' not in powered_by.lower():
+        return False, None
+
+    text = resp.text
+    if not _is_yaml_response(text):
+        return False, None
+
+    logger.info("检测到订阅 URL 已是 Sub-Store 导出的 YAML 成品")
+    return True, text
+
+
 def _create_subscription(base, sub_id, url):
     """在 sub-store 中创建临时订阅。
 
@@ -109,6 +150,13 @@ def get_subscription_proxies_yaml(sub_id, url, target='ClashMeta'):
     Raises:
         Exception: 获取失败或返回的不是有效 YAML
     """
+    try:
+        is_rendered_yaml, rendered_yaml = _looks_like_sub_store_rendered_yaml_response(url)
+        if is_rendered_yaml and rendered_yaml:
+            return rendered_yaml
+    except Exception as e:
+        logger.warning(f"探测订阅 URL 是否为 Sub-Store 成品失败，继续走标准流程: {e}")
+
     base = _get_base_url()
     logger.info(f"Sub-Store base URL: {base}")
 
@@ -117,6 +165,7 @@ def get_subscription_proxies_yaml(sub_id, url, target='ClashMeta'):
     # 创建临时订阅
     _create_subscription(base, temp_name, url)
 
+    sub_store_error = None
     try:
         # 下载订阅（target 放在路径中，这是 Sub-Store 推荐的方式）
         download_url = f'{base}/download/{quote(temp_name, safe="")}/{target}'
@@ -136,9 +185,21 @@ def get_subscription_proxies_yaml(sub_id, url, target='ClashMeta'):
             )
 
         return text
+    except Exception as e:
+        sub_store_error = e
+        logger.warning(f"Sub-Store 获取订阅失败，尝试直接拉取原始订阅 URL: {e}")
     finally:
         # 用完即删，不在 Sub-Store 中残留订阅数据
         _delete_subscription(base, temp_name)
+
+    try:
+        return _fetch_direct_subscription_yaml(url)
+    except Exception as direct_error:
+        raise Exception(
+            "Sub-Store 获取失败，且直接拉取订阅也失败。"
+            f"Sub-Store 错误: {sub_store_error}; "
+            f"直接拉取错误: {direct_error}"
+        )
 
 
 _TEMP_NODE_SUB_NAME = '_cf_tmp_node_convert'
