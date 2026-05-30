@@ -83,7 +83,7 @@ def generate_aggregation_provider(aggregation: Dict[str, Any]) -> Dict[str, Any]
                 # 优先通过 Sub-Store 获取
                 try:
                     logger.info(f"尝试通过 Sub-Store 获取订阅最新数据: '{sub['name']}'")
-                    yaml_text = get_subscription_proxies_yaml(sub_id, sub['url'])
+                    yaml_text, source = get_subscription_proxies_yaml(sub_id, sub['url'])
                     proxies = parse_proxies_from_yaml(yaml_text)
                     sub_proxies_map[sub_id] = proxies
 
@@ -104,7 +104,14 @@ def generate_aggregation_provider(aggregation: Dict[str, Any]) -> Dict[str, Any]
                             'url': sub.get('url')
                         }
                     )
-                    logger.info(f"成功通过 Sub-Store 获取并更新缓存: '{sub['name']}', 节点数: {len(nodes_list)}")
+                    if source == 'rendered_yaml':
+                        logger.info(f"成功直接复用订阅 URL 返回的 Sub-Store YAML 并更新缓存: '{sub['name']}', 节点数: {len(nodes_list)}")
+                    elif source == 'sub_store':
+                        logger.info(f"成功通过 Sub-Store 转换订阅并更新缓存: '{sub['name']}', 节点数: {len(nodes_list)}")
+                    elif source == 'direct_url_fallback':
+                        logger.info(f"Sub-Store 获取失败后，成功直接拉取原始订阅并更新缓存: '{sub['name']}', 节点数: {len(nodes_list)}")
+                    else:
+                        logger.info(f"成功获取订阅并更新缓存: '{sub['name']}', 节点数: {len(nodes_list)}")
                 except Exception as e:
                     logger.warning(f"通过 Sub-Store 获取订阅 '{sub['name']}' 失败: {e}, 尝试读取本地缓存")
 
