@@ -173,7 +173,7 @@ def fetch_subscription(sub_id):
     # 优先尝试从 Sub-Store 获取
     try:
         current_app.logger.info(f"尝试通过 Sub-Store 获取订阅: {sub['name']} (id: {sub_id})")
-        yaml_text = get_subscription_proxies_yaml(sub_id, sub['url'])
+        yaml_text, source = get_subscription_proxies_yaml(sub_id, sub['url'])
         proxies = parse_proxies_from_yaml(yaml_text)
         nodes = proxies_to_nodes(proxies)
 
@@ -193,7 +193,14 @@ def fetch_subscription(sub_id):
                 'url': sub.get('url')
             }
         )
-        current_app.logger.info(f"成功通过 Sub-Store 获取订阅并缓存: {sub['name']}, 节点数: {len(nodes)}")
+        if source == 'rendered_yaml':
+            current_app.logger.info(f"成功直接复用订阅 URL 返回的 Sub-Store YAML 并写入缓存: {sub['name']}, 节点数: {len(nodes)}")
+        elif source == 'sub_store':
+            current_app.logger.info(f"成功通过 Sub-Store 转换订阅并写入缓存: {sub['name']}, 节点数: {len(nodes)}")
+        elif source == 'direct_url_fallback':
+            current_app.logger.info(f"Sub-Store 获取失败后，成功直接拉取原始订阅并写入缓存: {sub['name']}, 节点数: {len(nodes)}")
+        else:
+            current_app.logger.info(f"成功获取订阅并写入缓存: {sub['name']}, 节点数: {len(nodes)}")
 
     except Exception as e:
         fetch_error = str(e)
@@ -294,7 +301,7 @@ def get_all_subscription_proxies():
             # 通过 Sub-Store 获取 proxies
             proxies = []
             try:
-                yaml_text = get_subscription_proxies_yaml(sub_id, sub_url)
+                yaml_text, _source = get_subscription_proxies_yaml(sub_id, sub_url)
                 proxies = parse_proxies_from_yaml(yaml_text)
             except Exception as e:
                 current_app.logger.warning(f"通过 Sub-Store 获取订阅 '{sub_name}' 失败: {e}，尝试本地缓存")
@@ -400,8 +407,8 @@ def get_subscription_proxies(sub_id):
         # 优先通过 Sub-Store 获取
         if sub_url:
             try:
-                current_app.logger.info(f"尝试通过 Sub-Store 获取最新配置: {sub_name} (id: {sub_id})")
-                yaml_text = get_subscription_proxies_yaml(sub_id, sub_url)
+                current_app.logger.info(f"尝试获取最新配置: {sub_name} (id: {sub_id})")
+                yaml_text, source = get_subscription_proxies_yaml(sub_id, sub_url)
                 proxies = parse_proxies_from_yaml(yaml_text)
 
                 if proxies:
@@ -421,7 +428,14 @@ def get_subscription_proxies(sub_id):
                         }
                     )
                     cache_updated = True
-                    current_app.logger.info(f"成功通过 Sub-Store 获取并更新缓存: {sub_name}, 节点数: {len(proxies)}")
+                    if source == 'rendered_yaml':
+                        current_app.logger.info(f"成功直接复用订阅 URL 返回的 Sub-Store YAML 并更新缓存: {sub_name}, 节点数: {len(proxies)}")
+                    elif source == 'sub_store':
+                        current_app.logger.info(f"成功通过 Sub-Store 转换订阅并更新缓存: {sub_name}, 节点数: {len(proxies)}")
+                    elif source == 'direct_url_fallback':
+                        current_app.logger.info(f"Sub-Store 获取失败后，成功直接拉取原始订阅并更新缓存: {sub_name}, 节点数: {len(proxies)}")
+                    else:
+                        current_app.logger.info(f"成功获取订阅并更新缓存: {sub_name}, 节点数: {len(proxies)}")
             except Exception as e:
                 fetch_error = str(e)
                 current_app.logger.warning(f"通过 Sub-Store 获取配置失败: {sub_name}, 错误: {fetch_error}, 将使用本地缓存")
