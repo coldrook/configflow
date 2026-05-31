@@ -891,6 +891,43 @@ const formatRuleValueForRuleSet = (value: string) => {
   return trimmedValue
 }
 
+const isValidIpv4Cidr = (value: string) => {
+  const match = value.match(/^(\d{1,3})(?:\.(\d{1,3})){3}\/(\d{1,2})$/)
+  if (!match) return false
+
+  const [address, prefix] = value.split('/')
+  const octets = address.split('.').map(Number)
+  const prefixNumber = Number(prefix)
+
+  return octets.every(octet => octet >= 0 && octet <= 255) && prefixNumber >= 0 && prefixNumber <= 32
+}
+
+const isValidIpv6Cidr = (value: string) => {
+  const match = value.match(/^([0-9a-fA-F:]+)\/(\d{1,3})$/)
+  if (!match || !match[1].includes(':')) return false
+
+  const prefixNumber = Number(match[2])
+  return prefixNumber >= 0 && prefixNumber <= 128
+}
+
+const isValidCidr = (value: string) => isValidIpv4Cidr(value) || isValidIpv6Cidr(value)
+
+const isLikelyDomainValue = (value: string) => {
+  if (value.includes(',') || value.includes('/')) return false
+  return /^[a-zA-Z0-9+*_.-]+$/.test(value)
+}
+
+const getInvalidRuleValue = (values: string[]) => {
+  switch (currentRuleSet.value?.behavior) {
+    case 'domain':
+      return values.find(value => !isLikelyDomainValue(value.trim()))
+    case 'ipcidr':
+      return values.find(value => !isValidCidr(value.trim()))
+    default:
+      return undefined
+  }
+}
+
 const saveRuleToSet = async () => {
   if (!currentRuleSet.value) {
     return
@@ -902,6 +939,14 @@ const saveRuleToSet = async () => {
   }
 
   const values = addRuleToSetForm.value.value.trim().split('\n').filter(line => line.trim())
+  const invalidValue = getInvalidRuleValue(values)
+  if (invalidValue) {
+    const behavior = currentRuleSet.value.behavior
+    const expectedText = behavior === 'ipcidr' ? 'CIDR，例如 1.1.1.0/24' : '域名，例如 example.com'
+    ElMessage.warning(`"${invalidValue.trim()}" 不符合 ${currentRuleSet.value.name} 的规则集类型，请输入${expectedText}`)
+    return
+  }
+
   const newRules = values.map(formatRuleValueForRuleSet).join('\n')
 
   const existingContent = currentRuleSet.value.content || ''
