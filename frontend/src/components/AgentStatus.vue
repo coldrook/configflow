@@ -272,6 +272,14 @@ const chartTooltipBase = {
   extraCssText: 'z-index: 9999; pointer-events: none;'
 }
 
+const formatTrafficAxisLabel = (value: number) => {
+  if (value >= 1024) {
+    const tb = value / 1024
+    return `${tb >= 10 ? tb.toFixed(0) : tb.toFixed(1)} TB`
+  }
+  return `${value.toFixed(0)} GB`
+}
+
 // CPU 图表配置
 const getCpuChartOption = (agentId: string) => {
   const history = metricsHistory.value[agentId] || []
@@ -431,7 +439,7 @@ const getTrafficTrendChartOption = (agentId: string) => {
   const todayDownload = stats?.today?.bytes_recv_delta || 0
 
   return {
-    grid: { left: 8, right: 10, top: 15, bottom: 20, containLabel: true },
+    grid: { left: 8, right: 10, top: 8, bottom: 0, containLabel: true },
     xAxis: {
       type: 'category',
       data: timestamps,
@@ -440,11 +448,13 @@ const getTrafficTrendChartOption = (agentId: string) => {
     },
     yAxis: {
       type: 'value',
+      min: 0,
+      splitNumber: 4,
       axisLabel: {
         fontSize: 10,
         color: '#666',
         margin: 8,
-        formatter: (value: number) => `${value} GB`
+        formatter: formatTrafficAxisLabel
       },
       splitLine: { lineStyle: { color: '#f0f0f0' } }
     },
