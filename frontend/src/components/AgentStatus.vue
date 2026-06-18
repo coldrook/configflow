@@ -85,7 +85,7 @@
 
           <!-- 3. 网络速率 -->
           <div class="metric-item">
-            <div class="metric-header">
+            <div class="metric-header metric-header-network">
               <span class="metric-name">网络速率</span>
               <span class="metric-value metric-network">
                 <span class="upload">↑{{ formatSpeed(agent.system_metrics.network?.speed_sent) }}</span>
@@ -105,7 +105,7 @@
 
           <!-- 4. 流量统计 -->
           <div class="metric-item" v-if="trafficStats[agent.id]">
-            <div class="metric-header">
+            <div class="metric-header metric-header-network">
               <span class="metric-name">流量统计</span>
               <span class="metric-value metric-network">
                 <span class="upload">↑{{ formatBytes(trafficStats[agent.id].total?.bytes_sent) }}</span>
@@ -906,10 +906,37 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .agent-metrics-section {
     grid-template-columns: repeat(2, 1fr);
+    gap: 16px 12px;
   }
 
   .agent-row {
     padding: 20px;
+  }
+
+  .metric-header {
+    gap: 4px 8px;
+  }
+
+  .metric-header-network {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 44px;
+  }
+
+  .metric-header-network .metric-value.metric-network {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 2px 8px;
+    line-height: 16px;
+    min-height: 0;
+    width: 100%;
+  }
+
+  .metric-header-network .upload,
+  .metric-header-network .download {
+    white-space: nowrap;
   }
 }
 </style>
