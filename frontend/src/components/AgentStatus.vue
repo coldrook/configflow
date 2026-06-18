@@ -266,6 +266,12 @@ const loadAllMetricsHistory = async () => {
   }
 }
 
+const chartTooltipBase = {
+  appendToBody: true,
+  confine: false,
+  extraCssText: 'z-index: 9999; pointer-events: none;'
+}
+
 // CPU 图表配置
 const getCpuChartOption = (agentId: string) => {
   const history = metricsHistory.value[agentId] || []
@@ -276,6 +282,7 @@ const getCpuChartOption = (agentId: string) => {
     xAxis: { type: 'category', show: false, boundaryGap: false },
     yAxis: { type: 'value', show: false, max: 100 },
     tooltip: {
+      ...chartTooltipBase,
       trigger: 'axis',
       formatter: '{c}%',
       axisPointer: { type: 'line' }
@@ -310,6 +317,7 @@ const getMemoryChartOption = (agentId: string) => {
     xAxis: { type: 'category', show: false, boundaryGap: false },
     yAxis: { type: 'value', show: false, max: 100 },
     tooltip: {
+      ...chartTooltipBase,
       trigger: 'axis',
       formatter: '{c}%',
       axisPointer: { type: 'line' }
@@ -344,6 +352,7 @@ const getDiskChartOption = (agentId: string) => {
     xAxis: { type: 'category', show: false, boundaryGap: false },
     yAxis: { type: 'value', show: false, max: 100 },
     tooltip: {
+      ...chartTooltipBase,
       trigger: 'axis',
       formatter: '{c}%',
       axisPointer: { type: 'line' }
@@ -379,6 +388,7 @@ const getNetworkChartOption = (agentId: string) => {
     xAxis: { type: 'category', show: false, boundaryGap: false },
     yAxis: { type: 'value', show: false },
     tooltip: {
+      ...chartTooltipBase,
       trigger: 'axis',
       formatter: (params: any) => `↑${params[0].value} KB/s<br/>↓${params[1].value} KB/s`,
       axisPointer: { type: 'line' }
@@ -421,7 +431,7 @@ const getTrafficTrendChartOption = (agentId: string) => {
   const todayDownload = stats?.today?.bytes_recv_delta || 0
 
   return {
-    grid: { left: 35, right: 10, top: 15, bottom: 20 },
+    grid: { left: 8, right: 10, top: 15, bottom: 20, containLabel: true },
     xAxis: {
       type: 'category',
       data: timestamps,
@@ -433,11 +443,13 @@ const getTrafficTrendChartOption = (agentId: string) => {
       axisLabel: {
         fontSize: 10,
         color: '#666',
+        margin: 8,
         formatter: (value: number) => `${value} GB`
       },
       splitLine: { lineStyle: { color: '#f0f0f0' } }
     },
     tooltip: {
+      ...chartTooltipBase,
       trigger: 'axis',
       formatter: (params: any) => {
         const time = params[0].axisValue
@@ -579,7 +591,7 @@ onUnmounted(() => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .agent-row::before {
@@ -592,6 +604,7 @@ onUnmounted(() => {
   background: linear-gradient(180deg, #6b7dff 0%, #5b6dff 100%);
   opacity: 0;
   transition: opacity 0.3s;
+  border-radius: 20px 0 0 20px;
 }
 
 .agent-row:hover {
@@ -801,7 +814,7 @@ onUnmounted(() => {
   background: rgba(107, 115, 255, 0.02);
   border-radius: 8px;
   border: 1px solid rgba(107, 115, 255, 0.06);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .no-data {
