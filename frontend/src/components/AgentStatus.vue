@@ -771,10 +771,13 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  min-height: 24px;
+  margin-bottom: 0;
+  min-width: 0;
 }
 
 .metric-name {
+  flex: 0 0 auto;
   font-size: 12px;
   font-weight: 700;
   color: #7d88af;
@@ -783,16 +786,22 @@ onUnmounted(() => {
 }
 
 .metric-value {
+  flex: 0 1 auto;
   font-size: 14px;
   font-weight: 700;
   font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  line-height: 20px;
   padding: 2px 8px;
   border-radius: 6px;
+  white-space: nowrap;
 }
 
 .metric-value.metric-network {
   display: flex;
+  align-items: center;
+  justify-content: flex-end;
   gap: 8px;
+  min-height: 24px;
   padding: 0;
   font-size: 11px;
 }
